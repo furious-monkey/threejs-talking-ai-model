@@ -146,6 +146,7 @@ class ChatBox extends React.Component {
           margin: "auto",
           height: "500px",
           width: "50%",
+          maxWidth: "400px",
         }}
       >
         <MainContainer>

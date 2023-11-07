@@ -82,7 +82,7 @@ export default function App() {
   return (
     <div style={{ display: "flex" }}>
       <ChatBox client={convaiClient} />
-      {/* <Canvas
+      <Canvas
         style={{ height: "600px" }}
         shadows
         camera={{ position: [0, 0, 15], fov: 30 }}
@@ -135,7 +135,7 @@ export default function App() {
           minPolarAngle={Math.PI / 3}
           maxPolarAngle={Math.PI / 2.25}
         />
-      </Canvas> */}
+      </Canvas>
     </div>
   );
 }
