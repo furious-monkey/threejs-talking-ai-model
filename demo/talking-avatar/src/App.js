@@ -51,6 +51,7 @@ export default function App() {
   });
 
   convaiClient.onAudioStop(() => {
+    convaiClient.resetSession();
     setIsTalking(false);
   });
 
@@ -58,6 +59,7 @@ export default function App() {
 
   function handleBacktickbarPress(event) {
     if (event.key === "`" && !keyPressed) {
+      convaiClient.resetSession();
       setKeyPressed(true);
       finalizedUserText.current = "";
       npcTextRef.current = "";
@@ -70,6 +72,7 @@ export default function App() {
   function handleBacktickbarRelease(event) {
     if (event.key === "`" && keyPressed) {
       setKeyPressed(false);
+      console.log("Released");
       convaiClient.endAudioChunk();
       convaiClient.resetSession();
     }

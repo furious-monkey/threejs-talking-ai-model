@@ -1,8 +1,5 @@
-import { useEffect, useState } from "react";
-import * as ReactDOM from "react-dom";
 import * as React from "react";
 import { ConvaiClient } from "convai-web-sdk";
-import { GetResponseResponse } from "convai-web-sdk/dist/Proto/service/service_pb";
 import "./app.scss";
 import {
   MainContainer,
@@ -15,8 +12,6 @@ import {
   ConversationHeader,
 } from "@chatscope/chat-ui-kit-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faMicrophone } from "@fortawesome/free-solid-svg-icons/faMicrophone";
-import { faMicrophoneSlash } from "@fortawesome/free-solid-svg-icons/faMicrophoneSlash";
 import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
 import { SETTINGS } from "./constants";
 
@@ -51,7 +46,6 @@ class ChatBox extends React.Component {
     this.setState({ userMsg: msg, messages: messages });
   }
   sendMsg(e) {
-    console.log(e);
     var userMsg = this.state.userMsg;
     var responseText = "";
     var newMessages = this.state.messages;
@@ -63,12 +57,10 @@ class ChatBox extends React.Component {
     });
 
     this.client.setResponseCallback((response) => {
-      console.log("Chat Box set response callback");
       if (response.hasAudioResponse()) {
         var newMessages = this.state.messages;
         newMessages.pop();
         responseText += response?.getAudioResponse()?.getTextData();
-        console.log("AI: ", response?.getAudioResponse()?.getTextData());
         newMessages.push({ speaker: "NPC", msg: responseText });
         this.client.resetSession();
         this.setState({
