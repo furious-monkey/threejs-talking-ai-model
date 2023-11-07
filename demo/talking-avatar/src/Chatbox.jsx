@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import * as ReactDOM from 'react-dom';
-import * as React from 'react';
-import { ConvaiClient } from 'convai-web-sdk';
-import { GetResponseResponse } from "convai-web-sdk/dist/_proto/service/service_pb";
+import { useEffect, useState } from "react";
+import * as ReactDOM from "react-dom";
+import * as React from "react";
+import { ConvaiClient } from "convai-web-sdk";
+import { GetResponseResponse } from "convai-web-sdk/dist/Proto/service/service_pb";
 import "./app.scss";
 import {
   MainContainer,
@@ -20,47 +20,34 @@ import { faMicrophoneSlash } from "@fortawesome/free-solid-svg-icons/faMicrophon
 import { faPlay } from "@fortawesome/free-solid-svg-icons/faPlay";
 import { SETTINGS } from "./constants";
 
-type ChatMessage = {
-  speaker: string,
-  msg: string
-}
-type Chat = {
-  userMsg: string,
-  messages: Array<ChatMessage>,
-}
-
-class App extends React.Component<{}, Chat> {
-  private client: ConvaiClient;
-  private talkMsg = "Talk";
-  constructor(props: any) {
+class ChatBox extends React.Component {
+  constructor(props) {
     super(props);
     this.state = {
       userMsg: "",
       messages: [],
-    }
+      sessionId: "",
+    };
     this.handleMsgChange = this.handleMsgChange.bind(this);
     this.sendMsg = this.sendMsg.bind(this);
     this.talky = this.talky.bind(this);
     this.reset = this.reset.bind(this);
-    this.client = new ConvaiClient({
-      apiKey: SETTINGS.get("CONVAI-API-KEY") as string,
-      characterId: SETTINGS.get("CHARACTER-ID") as string,
-      enableAudio: true
-    });
+    this.client = this.props.client;
+    this.talkMsg = "Talk";
   }
-  reset(event: any) {
+  reset(event) {
     event.preventDefault();
     this.client.resetSession();
     this.setState({
       userMsg: "",
-      messages: []
+      messages: [],
     });
   }
-  handleMsgChange(msg: any) {
+  handleMsgChange(msg) {
     var messages = this.state.messages;
     this.setState({ userMsg: msg, messages: messages });
   }
-  talky(event: any) {
+  talky(event) {
     event.preventDefault();
     var messages = this.state.messages;
     var userMsg = this.state.userMsg;
@@ -77,9 +64,9 @@ class App extends React.Component<{}, Chat> {
         messages: newMessages,
       });
 
-      this.client.setResponseCallback((response: GetResponseResponse) => {
+      this.client.setResponseCallback((response) => {
         if (response.hasUserQuery()) {
-          var userQuery = response!.getUserQuery();
+          var userQuery = response.getUserQuery();
           var textData = userQuery?.getTextData();
           var newMessages = this.state.messages;
           if (textData != "") {
@@ -88,10 +75,13 @@ class App extends React.Component<{}, Chat> {
                 finalUserText += userQuery.getTextData();
                 tempUserText = "";
               } else {
-                tempUserText = userQuery!.getTextData();
+                tempUserText = userQuery.getTextData();
               }
             newMessages.pop();
-            newMessages.push({ speaker: "Me", msg: finalUserText + tempUserText });
+            newMessages.push({
+              speaker: "Me",
+              msg: finalUserText + tempUserText,
+            });
           }
           if (userQuery?.getEndOfResponse()) {
             newMessages.push({ speaker: "NPC", msg: "..." });
@@ -116,10 +106,11 @@ class App extends React.Component<{}, Chat> {
     } else {
       this.talkMsg = "Talk";
       this.client.endAudioChunk();
+      this.client.resetSession();
       this.setState({ userMsg: userMsg, messages: messages });
     }
   }
-  sendMsg(e: any) {
+  sendMsg(e) {
     console.log(e);
     var userMsg = this.state.userMsg;
     var responseText = "";
@@ -128,10 +119,10 @@ class App extends React.Component<{}, Chat> {
     newMessages.push({ speaker: "NPC", msg: "..." });
     this.setState({
       userMsg: "",
-      messages: newMessages
+      messages: newMessages,
     });
 
-    this.client.setResponseCallback((response: GetResponseResponse) => {
+    this.client.setResponseCallback((response) => {
       if (response.hasAudioResponse()) {
         var newMessages = this.state.messages;
         newMessages.pop();
@@ -139,7 +130,8 @@ class App extends React.Component<{}, Chat> {
         newMessages.push({ speaker: "NPC", msg: responseText });
         this.setState({
           userMsg: "",
-          messages: newMessages
+          messages: newMessages,
+          sessionId: response.getSessionId(),
         });
       }
     });
@@ -148,7 +140,14 @@ class App extends React.Component<{}, Chat> {
 
   render() {
     return (
-      <div style={{ position: "relative", margin: "auto", height: "500px", width: "50%" }}>
+      <div
+        style={{
+          position: "absolute",
+          margin: "auto",
+          height: "500px",
+          width: "50%",
+        }}
+      >
         <MainContainer>
           <ChatContainer>
             <ConversationHeader>
@@ -158,27 +157,46 @@ class App extends React.Component<{}, Chat> {
               </ConversationHeader.Actions>
             </ConversationHeader>
             <MessageList>
-              {this.state.messages.map(function (msg: ChatMessage, index: number) {
-                return <Message
-                  model={{
-                    message: msg.msg,
-                    sender: msg.speaker,
-                    direction: msg.speaker == "Me" ? "outgoing" : "incoming",
-                    position: "normal",
-                  }} key={index}
-                />
-
+              {this.state.messages.map(function (msg, index) {
+                return (
+                  <Message
+                    model={{
+                      message: msg.msg,
+                      sender: msg.speaker,
+                      direction: msg.speaker == "Me" ? "outgoing" : "incoming",
+                      position: "normal",
+                    }}
+                    key={index}
+                  />
+                );
               })}
             </MessageList>
           </ChatContainer>
         </MainContainer>
-        <div className='cs-message-input'>
+        <div className="cs-message-input">
           <InputToolbox>
-            <Button onClick={this.talky} icon={<FontAwesomeIcon icon={this.talkMsg == "Talk" ? faMicrophoneSlash : faMicrophone} />}></Button>
+            <Button
+              onClick={this.talky}
+              icon={
+                <FontAwesomeIcon
+                  icon={
+                    this.talkMsg == "Talk" ? faMicrophoneSlash : faMicrophone
+                  }
+                />
+              }
+            ></Button>
           </InputToolbox>
-          <MessageInput value={this.state.userMsg} onChange={this.handleMsgChange} sendButton={false} attachButton={false} />
+          <MessageInput
+            value={this.state.userMsg}
+            onChange={this.handleMsgChange}
+            sendButton={false}
+            attachButton={false}
+          />
           <InputToolbox>
-            <Button onClick={this.sendMsg} icon={<FontAwesomeIcon icon={faPlay} />} />
+            <Button
+              onClick={this.sendMsg}
+              icon={<FontAwesomeIcon icon={faPlay} />}
+            />
           </InputToolbox>
         </div>
       </div>
@@ -186,8 +204,4 @@ class App extends React.Component<{}, Chat> {
   }
 }
 
-const root = document.getElementById('root');
-ReactDOM.render(<App />, root);
-
-
-
+export default ChatBox;

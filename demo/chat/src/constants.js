@@ -1,0 +1,4 @@
+export const SETTINGS = new Map([
+  ["CONVAI-API-KEY", "05fcc550e9f9a84c7e3d4ed0902f745c"],
+  ["CHARACTER-ID", "36720106-3283-11ee-8365-42010a40000b"],
+]);
