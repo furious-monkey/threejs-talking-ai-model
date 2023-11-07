@@ -142,9 +142,10 @@ class ChatBox extends React.Component {
     return (
       <div
         style={{
-          position: "absolute",
-          margin: "auto",
-          height: "500px",
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "10px",
           width: "50%",
           maxWidth: "400px",
         }}

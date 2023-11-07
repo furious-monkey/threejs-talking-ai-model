@@ -80,10 +80,10 @@ export default function App() {
   }, [keyPressed]);
 
   return (
-    <div style={{ display: "flex" }}>
+    <div style={{ display: "flex", height: "100%" }}>
       <ChatBox client={convaiClient} />
       <Canvas
-        style={{ height: "600px" }}
+        style={{ display: "flex" }}
         shadows
         camera={{ position: [0, 0, 15], fov: 30 }}
       >
