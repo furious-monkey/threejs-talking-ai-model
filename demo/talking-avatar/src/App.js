@@ -13,7 +13,9 @@ const convaiClient = new ConvaiClient({
 });
 
 export default function App() {
-  const [userText, setUserText] = useState("Press & Hold Space to Talk!");
+  const [userText, setUserText] = useState(
+    "Press & Hold Backtick key (`) to Talk!"
+  );
   const finalizedUserText = useRef();
   const [npcText, setNpcText] = useState("");
   const npcTextRef = useRef();
@@ -21,8 +23,10 @@ export default function App() {
   const [isTalking, setIsTalking] = useState(false);
 
   convaiClient.setResponseCallback((response) => {
+    console.log("APP set response callback");
     if (response.hasUserQuery()) {
       var transcript = response.getUserQuery();
+      console.log("I said: ", transcript);
       var isFinal = transcript.getIsFinal();
       if (isFinal) {
         finalizedUserText.current += transcript.getTextData();
@@ -37,6 +41,7 @@ export default function App() {
     if (response.hasAudioResponse()) {
       var audioResponse = response?.getAudioResponse();
       npcTextRef.current += audioResponse.getTextData();
+      console.log("AI said: ", audioResponse.getTextData());
       setNpcText(npcTextRef.current);
     }
   });
@@ -51,8 +56,8 @@ export default function App() {
 
   const [keyPressed, setKeyPressed] = useState(false);
 
-  function handleSpacebarPress(event) {
-    if (event.keyCode === 32 && !keyPressed) {
+  function handleBacktickbarPress(event) {
+    if (event.key === "`" && !keyPressed) {
       setKeyPressed(true);
       finalizedUserText.current = "";
       npcTextRef.current = "";
@@ -62,8 +67,8 @@ export default function App() {
     }
   }
 
-  function handleSpacebarRelease(event) {
-    if (event.keyCode === 32 && keyPressed) {
+  function handleBacktickbarRelease(event) {
+    if (event.key === "`" && keyPressed) {
       setKeyPressed(false);
       convaiClient.endAudioChunk();
       convaiClient.resetSession();
@@ -71,17 +76,17 @@ export default function App() {
   }
 
   useEffect(() => {
-    window.addEventListener("keydown", handleSpacebarPress);
-    window.addEventListener("keyup", handleSpacebarRelease);
+    window.addEventListener("keydown", handleBacktickbarPress);
+    window.addEventListener("keyup", handleBacktickbarRelease);
     return () => {
-      window.removeEventListener("keydown", handleSpacebarPress);
-      window.removeEventListener("keyup", handleSpacebarRelease);
+      window.removeEventListener("keydown", handleBacktickbarPress);
+      window.removeEventListener("keyup", handleBacktickbarRelease);
     };
   }, [keyPressed]);
 
   return (
     <div style={{ display: "flex", height: "100%" }}>
-      <ChatBox client={convaiClient} />
+      <ChatBox />
       <Canvas
         style={{ display: "flex" }}
         shadows

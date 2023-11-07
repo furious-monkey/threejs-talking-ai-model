@@ -17,7 +17,12 @@ $message-input-content-editor-wrapper-border-radius: 1em;
   z-index: 999;
 }
 
+.cs-message-input .cs-message-input {
+  flex: auto;
+}
+
 .cs-message-input .cs-input-toolbox {
+  width: 24px;
   padding-top: 5px;
   padding-left: 4px;
   padding-right: 4px;
@@ -27,11 +32,6 @@ $message-input-content-editor-wrapper-border-radius: 1em;
   margin-right: 0px;
 }
 
-.cs-message-input .cs-message-input {
-  width: 85%;
-}
-
 .cs-main-container {
   border-radius: 20px;
-  margin-bottom: 3%;
 }

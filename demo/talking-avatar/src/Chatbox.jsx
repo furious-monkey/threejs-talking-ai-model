@@ -26,13 +26,16 @@ class ChatBox extends React.Component {
     this.state = {
       userMsg: "",
       messages: [],
-      sessionId: "",
     };
     this.handleMsgChange = this.handleMsgChange.bind(this);
     this.sendMsg = this.sendMsg.bind(this);
-    this.talky = this.talky.bind(this);
     this.reset = this.reset.bind(this);
-    this.client = this.props.client;
+    this.client = new ConvaiClient({
+      apiKey: SETTINGS["CONVAI-API-KEY"],
+      characterId: SETTINGS["CHARACTER-ID"],
+      enableAudio: false,
+      enableFacialData: true,
+    });
     this.talkMsg = "Talk";
   }
   reset(event) {
@@ -47,69 +50,6 @@ class ChatBox extends React.Component {
     var messages = this.state.messages;
     this.setState({ userMsg: msg, messages: messages });
   }
-  talky(event) {
-    event.preventDefault();
-    var messages = this.state.messages;
-    var userMsg = this.state.userMsg;
-    if (this.talkMsg == "Talk") {
-      this.talkMsg = "Stop Talking";
-      this.setState({ userMsg: userMsg, messages: messages });
-      var responseText = "";
-      var finalUserText = "";
-      var tempUserText = "";
-      var newMessages = this.state.messages;
-      newMessages.push({ speaker: "Me", msg: "..." });
-      this.setState({
-        userMsg: "",
-        messages: newMessages,
-      });
-
-      this.client.setResponseCallback((response) => {
-        if (response.hasUserQuery()) {
-          var userQuery = response.getUserQuery();
-          var textData = userQuery?.getTextData();
-          var newMessages = this.state.messages;
-          if (textData != "") {
-            if (userQuery?.getTextData)
-              if (userQuery?.getIsFinal()) {
-                finalUserText += userQuery.getTextData();
-                tempUserText = "";
-              } else {
-                tempUserText = userQuery.getTextData();
-              }
-            newMessages.pop();
-            newMessages.push({
-              speaker: "Me",
-              msg: finalUserText + tempUserText,
-            });
-          }
-          if (userQuery?.getEndOfResponse()) {
-            newMessages.push({ speaker: "NPC", msg: "..." });
-          }
-          this.setState({
-            userMsg: "",
-            messages: newMessages,
-          });
-        }
-        if (response.hasAudioResponse()) {
-          var newMessages = this.state.messages;
-          newMessages.pop();
-          responseText += response?.getAudioResponse()?.getTextData();
-          newMessages.push({ speaker: "NPC", msg: responseText });
-          this.setState({
-            userMsg: "",
-            messages: newMessages,
-          });
-        }
-      });
-      this.client.startAudioChunk();
-    } else {
-      this.talkMsg = "Talk";
-      this.client.endAudioChunk();
-      this.client.resetSession();
-      this.setState({ userMsg: userMsg, messages: messages });
-    }
-  }
   sendMsg(e) {
     console.log(e);
     var userMsg = this.state.userMsg;
@@ -123,15 +63,17 @@ class ChatBox extends React.Component {
     });
 
     this.client.setResponseCallback((response) => {
+      console.log("Chat Box set response callback");
       if (response.hasAudioResponse()) {
         var newMessages = this.state.messages;
         newMessages.pop();
         responseText += response?.getAudioResponse()?.getTextData();
+        console.log("AI: ", response?.getAudioResponse()?.getTextData());
         newMessages.push({ speaker: "NPC", msg: responseText });
+        this.client.resetSession();
         this.setState({
           userMsg: "",
           messages: newMessages,
-          sessionId: response.getSessionId(),
         });
       }
     });
@@ -143,6 +85,7 @@ class ChatBox extends React.Component {
       <div
         style={{
           display: "flex",
+          gap: "10px",
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "10px",
@@ -176,18 +119,6 @@ class ChatBox extends React.Component {
           </ChatContainer>
         </MainContainer>
         <div className="cs-message-input">
-          <InputToolbox>
-            <Button
-              onClick={this.talky}
-              icon={
-                <FontAwesomeIcon
-                  icon={
-                    this.talkMsg == "Talk" ? faMicrophoneSlash : faMicrophone
-                  }
-                />
-              }
-            ></Button>
-          </InputToolbox>
           <MessageInput
             value={this.state.userMsg}
             onChange={this.handleMsgChange}
